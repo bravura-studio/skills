@@ -5,7 +5,7 @@ description: |
   data flow, edge cases, and test strategy. Combines CEO-level scope review with
   eng-manager-level technical review in one pass. Use after sprint-plan or when
   someone says "review my plan", "lock the scope", "what's the architecture".
-version: 2.1.0
+version: 3.0.0
 category: sprint
 interactive: true
 allowed-tools:
@@ -114,24 +114,89 @@ Define what "done" looks like in testable terms:
 - **Test approach:** Unit? Integration? Manual? E2E?
 - **Verification method:** How does QA (qa-check skill) verify this?
 
-### Step 5: Create PRD (ai-dev-tasks integration)
+### Step 5: PRD Deep-Dive Interview
 
-Once scope and architecture are locked, create the formal PRD using launchkit's `/create-prd`:
+The design doc has the WHAT and WHY. Now we need the HOW and DONE-WHEN — concrete enough that a coder can build it and QA can verify it.
+
+Run 6 PRD-specific questions. Unlike sprint-plan's strategic questions, these are **implementation-focused and reference the design doc directly.** Adapt each question to the specific feature — don't read them like a script.
+
+**PQ1: User Journey**
+"The design doc says the narrowest wedge is {Q3 answer from design doc}. Walk me through exactly what the user sees — from landing on the page to getting the result. What do they click? What loads? What appears?"
+
+*Why: Forces concrete UI thinking. Vague scope → vague ACs. A step-by-step journey exposes missing steps.*
+
+**PQ2: Success Moment**
+"The insight is {Q4 answer}. What's the ONE thing the user must see or feel that proves this insight is real? What's the screenshot that makes someone share this?"
+
+*Why: Defines the hero AC — the one that matters most. If you nail this, the feature works even if edges are rough.*
+
+**PQ3: Data & State**
+"What data does this need? Where does it come from — user input, API, database, scraping? What happens if the data source is empty, slow, or wrong?"
+
+*Why: Surfaces integration complexity and error handling before coding starts.*
+
+**PQ4: Design Impact**
+"How much does this change how the product looks and feels? Is it invisible backend work (none), a small UI addition (minor), or a significant visual change (major)? What existing patterns can we reuse?"
+
+*Why: Sets the `design_impact` tag that controls whether the design iterator runs during QA. Avoids both over-polishing and shipping ugly.*
+
+**PQ5: Scope Knife**
+"You mentioned {risk from Q6} as a risk. Should we handle that in v1 or explicitly defer it? Is there anything else in the wedge that could be cut without losing the core value?"
+
+*Why: Last chance to cut scope before committing to ACs. Easier to cut here than after tasks are generated.*
+
+**PQ6: Done-When**
+"If you could only test 3 things to know this works, what would they be?"
+
+*Why: These become your top 3 acceptance criteria. Everything else is secondary. Keeps the AC list focused.*
+
+> **CHECKPOINT:** After all 6 answers, summarize the findings. Ask: "Did I capture this right? Anything to add before I write the PRD?"
+
+### Step 5b: Write the PRD
+
+Using the deep-dive answers, create the formal PRD. In launchkit projects, use `/create-prd` as the starting point:
 
 ```bash
-# Generate PRD from the locked scope + architecture
 /create-prd
 ```
 
-The PRD should include:
-- **Acceptance criteria** — boolean pass/fail items for each feature (AC-1, AC-2, ...)
-- **Design requirements** — visual/UX expectations with `design_impact: none | minor | major`
-- **Technical constraints** — stack, performance targets, accessibility
-- **Out of scope** — explicitly list what's NOT included (prevents scope creep)
+Structure the PRD (whether from `/create-prd` or written manually):
 
-**Output path:** `product/prds/prd-{N}-{name}.md`
+```markdown
+# PRD-{N}: {Feature Name}
 
-If NOT a launchkit project, write the PRD manually following the same structure. The key is having testable acceptance criteria — that's what `qa-check` and Cruz verify against.
+**Date:** {YYYY-MM-DD}
+**Design doc:** {link to sprint-plan output}
+**Design impact:** {none | minor | major}
+
+## User Journey
+{PQ1 answer — step by step}
+
+## Success Moment
+{PQ2 answer — the hero screenshot}
+
+## Acceptance Criteria
+- [ ] AC-1: {from PQ6 top 3 — the must-haves}
+- [ ] AC-2: {second must-have}
+- [ ] AC-3: {third must-have}
+- [ ] AC-4: {additional from PQ1 journey steps}
+- [ ] AC-5: {error handling from PQ3}
+
+## Design Requirements
+{PQ4 answer — visual expectations, patterns to reuse}
+design_impact: {none | minor | major}
+
+## Technical Constraints
+{PQ3 answer — data sources, APIs, performance targets}
+
+## Out of Scope
+{PQ5 answer — explicitly deferred items}
+
+## Open Questions
+{Anything unresolved from the deep-dive}
+```
+
+**Output path:** `product/prds/prd-{N}-{name}.md` (launchkit) or `skills/_output/prd-{date}-{slug}.md` (non-launchkit)
 
 > **CHECKPOINT:** Present the PRD. Ask: "Are these acceptance criteria right? Anything missing or too aggressive?"
 

@@ -5,7 +5,7 @@ description: |
   the project's learnings.jsonl. Reviews what worked, what didn't, and what to
   do differently. Use after a PR is merged, a sprint completes, or when someone
   says "retro", "what did we learn", "retrospective".
-version: 1.0.0
+version: 2.0.0
 category: sprint
 interactive: true
 allowed-tools:
@@ -116,7 +116,24 @@ For each learning, append to `skills/_learnings/{project-slug}.jsonl`:
 - `corrected`: Founder corrected the agent's approach
 - `validated`: Founder confirmed a non-obvious choice was right
 
-### Step 5: Evaluate Skill Updates
+### Step 5: Run Compound Engineering (ai-dev-tasks integration)
+
+If this is a launchkit project, run the compound engineering workflow to extract learnings into the project's CLAUDE.md and qmd vault:
+
+```bash
+# Run compound learning extraction
+/workflows:compound
+```
+
+This does two things that complement the retro's learnings.jsonl writes:
+- **CLAUDE.md rules:** Technical patterns become HOT-layer rules (loaded every session, max 50)
+- **qmd vault patterns:** Broader insights written to the project's vault (WARM layer, searchable)
+
+The retro skill's learnings.jsonl (Step 4) captures process/operational insights. `/workflows:compound` captures technical/code patterns. Both are needed — they're complementary, not duplicative.
+
+If NOT a launchkit project, skip this step. The learnings.jsonl from Step 4 is sufficient.
+
+### Step 6: Evaluate Skill Updates
 
 Check if any learning warrants updating a skill:
 - Should `code-review` check for something it missed this sprint?
@@ -125,7 +142,7 @@ Check if any learning warrants updating a skill:
 
 If yes, note the proposed skill update but don't make it — flag for the founder to approve.
 
-### Step 6: Report
+### Step 7: Report
 
 ```markdown
 ## Retro: {sprint description}

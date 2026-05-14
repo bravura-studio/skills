@@ -5,7 +5,7 @@ description: |
   issues, style violations, and missing tests. Auto-fixes obvious issues, flags
   judgment calls. Use when someone says "review my code", "check my changes",
   "pre-merge check", or before any PR creation.
-version: 1.0.0
+version: 2.0.0
 category: sprint
 interactive: false
 allowed-tools:
@@ -40,10 +40,13 @@ This runs after implementation, before QA and PR creation. The goal is to catch 
 
 Not a nitpick pass. Focus on things that would break in production or confuse the next reader.
 
+**Relationship to launchkit `/review`:** In launchkit projects, `/review` runs automatically after each parent task commit (per `/process-tasks` workflow). This skill is the broader audit that runs ONCE after all implementation is complete — it covers the full diff against main, not individual commits. Think of `/review` as per-commit lint and this skill as the pre-merge gate.
+
 ## Prerequisites
 
 - Code changes exist (staged, unstaged, or committed on a branch)
 - Ideally a locked plan from `sprint-review` to review against (check `skills/_output/sprint-review-*.md`)
+- In launchkit projects: `/process-tasks` has completed all parent tasks and per-commit `/review` has already run
 
 ## Steps
 
@@ -89,7 +92,20 @@ Check OWASP Top 10 for the relevant stack:
 - **Tests:** Are new code paths tested? Are edge cases covered?
 - **Performance:** Any obvious N+1 queries, unbounded loops, or missing indexes?
 
-### Step 5: Auto-Fix Obvious Issues
+### Step 5: Run Launchkit /review (if applicable)
+
+If this is a launchkit project and `/review` hasn't run on all changed files yet:
+
+```bash
+# Run launchkit's review on all changed files since main
+/review last-commit
+```
+
+Check `todos/` for any findings. Resolve any 🔴 Must Fix items before proceeding.
+
+If NOT a launchkit project, or `/review` has already run, skip this step.
+
+### Step 6: Auto-Fix Obvious Issues
 
 Fix directly (no need to ask):
 - Typos in variable names or strings
@@ -97,7 +113,7 @@ Fix directly (no need to ask):
 - Unused imports
 - Console.log / debug statements left in
 
-### Step 6: Report Findings
+### Step 7: Report Findings
 
 Write a structured review. Categorize each finding:
 

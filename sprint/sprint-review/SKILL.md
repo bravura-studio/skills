@@ -5,7 +5,7 @@ description: |
   data flow, edge cases, and test strategy. Combines CEO-level scope review with
   eng-manager-level technical review in one pass. Use after sprint-plan or when
   someone says "review my plan", "lock the scope", "what's the architecture".
-version: 2.0.0
+version: 2.1.0
 category: sprint
 interactive: true
 allowed-tools:
@@ -114,17 +114,37 @@ Define what "done" looks like in testable terms:
 - **Test approach:** Unit? Integration? Manual? E2E?
 - **Verification method:** How does QA (qa-check skill) verify this?
 
-### Step 5: Generate Task Breakdown (ai-dev-tasks integration)
+### Step 5: Create PRD (ai-dev-tasks integration)
 
-Once scope and architecture are locked, generate the task breakdown using launchkit's `/generate-tasks`:
+Once scope and architecture are locked, create the formal PRD using launchkit's `/create-prd`:
 
 ```bash
-# If a PRD exists, decompose it into parent tasks + subtasks
+# Generate PRD from the locked scope + architecture
+/create-prd
+```
+
+The PRD should include:
+- **Acceptance criteria** — boolean pass/fail items for each feature (AC-1, AC-2, ...)
+- **Design requirements** — visual/UX expectations with `design_impact: none | minor | major`
+- **Technical constraints** — stack, performance targets, accessibility
+- **Out of scope** — explicitly list what's NOT included (prevents scope creep)
+
+**Output path:** `product/prds/prd-{N}-{name}.md`
+
+If NOT a launchkit project, write the PRD manually following the same structure. The key is having testable acceptance criteria — that's what `qa-check` and Cruz verify against.
+
+> **CHECKPOINT:** Present the PRD. Ask: "Are these acceptance criteria right? Anything missing or too aggressive?"
+
+### Step 6: Generate Task Breakdown (ai-dev-tasks integration)
+
+With the PRD approved, decompose it into tasks using `/generate-tasks`:
+
+```bash
 /generate-tasks product/prds/prd-{N}-{name}.md
 # Output: product/tasks/tasks-{N}-prd-{name}.md
 ```
 
-If no PRD exists (e.g., this is a non-launchkit project or a portfolio-level task), write the task breakdown manually in the locked plan.
+If no launchkit (non-tool project), write the task breakdown manually.
 
 **Task breakdown rules:**
 - One parent task = one atomic commit = one heartbeat for the coder
@@ -132,7 +152,7 @@ If no PRD exists (e.g., this is a non-launchkit project or a portfolio-level tas
 - Subtasks within a parent are executed sequentially, not cherry-picked
 - The first parent task should be scaffolding/setup; the last should be integration/cleanup
 
-### Step 6: Write the Locked Plan
+### Step 7: Write the Locked Plan
 
 **Output path:** `skills/_output/sprint-review-{date}-{slug}.md`
 

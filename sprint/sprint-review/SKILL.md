@@ -1,11 +1,11 @@
 ---
 name: sprint-review
 description: |
-  Plan phase. Takes a design doc from sprint-plan and locks scope, architecture,
-  data flow, edge cases, and test strategy. Combines CEO-level scope review with
-  eng-manager-level technical review in one pass. Use after sprint-plan or when
-  someone says "review my plan", "lock the scope", "what's the architecture".
-version: 3.0.0
+  PRD phase. Takes ONE feature from a roadmap and produces an atomic PRD with
+  architecture, acceptance criteria, edge cases, and task breakdown. Use after
+  roadmap or when someone says "review this feature", "write the PRD",
+  "lock the architecture", "sprint review".
+version: 4.0.0
 category: sprint
 interactive: true
 allowed-tools:
@@ -18,13 +18,12 @@ allowed-tools:
   - WebSearch
   - AskUserQuestion
 triggers:
-  - "review my plan"
-  - "lock the scope"
-  - "architecture review"
-  - "what's the approach"
+  - "review this feature"
+  - "write the PRD"
+  - "lock the architecture"
   - "sprint review"
 benefits-from:
-  - sprint-plan
+  - roadmap
 feeds-into:
   - code-review
 qmd:
@@ -39,141 +38,144 @@ writes-learnings: true
 
 ## Context
 
-This is the last gate before coding starts. The design doc from `sprint-plan` has the WHAT and WHY. This skill locks the HOW — architecture, data flow, edge cases, test strategy. After this, the coder has everything they need.
+The last gate before coding starts. Takes ONE atomic feature from the roadmap and
+produces everything a coder needs: architecture, acceptance criteria, edge cases,
+test strategy, and task breakdown.
 
-Two review lenses in one pass:
-1. **CEO lens:** Is the scope right? Too big? Too small? Does it match the portfolio strategy?
-2. **Eng lens:** Is the architecture sound? What are the edge cases? What's the test plan?
+**Scope:** This skill handles ONE feature only. If you have a high-level plan that
+needs decomposition into features, run `roadmap` first. CEO scope review lives in
+`roadmap` — this skill assumes scope is already locked.
+
+**Just-in-time PRDs:** This skill runs once per feature in the roadmap's execution
+loop. Previous features' retros inform this PRD. Never batch-write PRDs.
 
 ## Prerequisites
 
-- A design doc from `sprint-plan` (check `skills/_output/sprint-plan-*.md`)
-- If no design doc exists, suggest running `sprint-plan` first
+- A roadmap with sequenced features (check `skills/_output/roadmap-*.md`)
+- OR a sprint-plan for simple/single-feature work (check `skills/_output/sprint-plan-*.md`)
+- If neither exists, suggest running `sprint-plan` → `roadmap` first
+- For the second feature onward: the previous feature's retro should exist
 
 ## Steps
 
-### Step 1: Load the Design Doc
+### Step 1: Load Context
 
-Find the most recent design doc:
+```bash
+# Find the roadmap
+ls -t skills/_output/roadmap-*.md 2>/dev/null | head -1
+
+# Find the sprint-plan (for reference)
+ls -t skills/_output/sprint-plan-*.md 2>/dev/null | head -1
+
+# Find previous retros (learnings from prior features)
+ls -t skills/_output/retro-*.md 2>/dev/null | head -5
+
+# Find project learnings
+ls skills/_learnings/*.jsonl 2>/dev/null
 ```
-ls -t skills/_output/sprint-plan-*.md | head -1
-```
 
-Read it fully. Also read any referenced files (charters, existing code, prior art).
+Read the roadmap, identify which feature is `[ACTIVE]` or next `[PLANNED]`.
+Read the sprint-plan for strategic context.
+Read any previous retros — their learnings should shape this PRD.
 
-### Step 2: CEO Scope Review
+Also read any referenced files (charters, existing code, prior art, vault docs).
 
-Evaluate the scope against four modes (pick one and state which):
+### Step 2: Architecture Review
 
-| Mode | When | Action |
-|------|------|--------|
-| **Expand** | Scope is too small, missing obvious value | Propose additions |
-| **Selective Expand** | Scope is right but 1-2 cheap wins are sitting on the table | Cherry-pick expansions |
-| **Hold** | Scope is right | Confirm and move to eng review |
-| **Reduce** | Scope is too ambitious for current constraints | Propose cuts |
+For the target feature, define:
 
-Check against:
-- Portfolio strategy (read `architecture/build-sequence.md` if needed)
-- Time/resource constraints
-- Dependencies on other projects
-- Whether this is a wedge or a monolith
-
-> **CHECKPOINT:** State your scope recommendation and rationale. Ask: "Agree with this scope call? Any adjustments?"
-
-### Step 3: Architecture Review
-
-For the locked scope, define:
-
-**3a. Technical Approach**
+**2a. Technical Approach**
 - What stack/tools/patterns?
 - Build vs. extend vs. integrate?
 - Any existing code to reuse?
+- How does this feature connect to already-shipped features?
 
-**3b. Data Flow**
+**2b. Data Flow**
 - What data goes in? What comes out?
 - Where is state stored?
 - What are the failure modes in data flow?
 
-**3c. Edge Cases**
+**2c. Edge Cases**
 List at least 5 edge cases. For each:
 - What triggers it?
 - What's the expected behavior?
 - What breaks if we ignore it?
 
-**3d. Dependencies**
+**2d. Dependencies**
 - External services or APIs?
-- Other projects or shared infrastructure?
+- Other features that must be shipped first?
 - Anything that could block implementation?
 
-### Step 4: Test Strategy
+### Step 3: Test Strategy
 
 Define what "done" looks like in testable terms:
 
-- **Must-pass criteria:** What MUST work for this to ship?
+- **Must-pass criteria:** What MUST work for this feature to ship?
 - **Should-pass criteria:** What SHOULD work but won't block shipping?
 - **Test approach:** Unit? Integration? Manual? E2E?
 - **Verification method:** How does QA (qa-check skill) verify this?
 
-### Step 5: PRD Deep-Dive Interview
+### Step 4: PRD Deep-Dive Interview
 
-The design doc has the WHAT and WHY. Now we need the HOW and DONE-WHEN — concrete enough that a coder can build it and QA can verify it.
-
-Run 6 PRD-specific questions. Unlike sprint-plan's strategic questions, these are **implementation-focused and reference the design doc directly.** Adapt each question to the specific feature — don't read them like a script.
+Run 6 PRD-specific questions, adapted to THIS specific feature. Unlike sprint-plan's
+strategic questions, these are **implementation-focused.** Don't read them like a script
+— adapt to the feature.
 
 **PQ1: User Journey**
-"The design doc says the narrowest wedge is {Q3 answer from design doc}. Walk me through exactly what the user sees — from landing on the page to getting the result. What do they click? What loads? What appears?"
+"Walk me through exactly what happens when this feature runs — from trigger to output.
+What goes in? What comes out? What does the user see at each step?"
 
-*Why: Forces concrete UI thinking. Vague scope → vague ACs. A step-by-step journey exposes missing steps.*
+*Why: Forces concrete thinking. Vague features → vague ACs.*
 
 **PQ2: Success Moment**
-"The insight is {Q4 answer}. What's the ONE thing the user must see or feel that proves this insight is real? What's the screenshot that makes someone share this?"
+"What's the ONE thing that proves this feature works? What's the artifact or output
+that makes you say 'yes, this is right'?"
 
-*Why: Defines the hero AC — the one that matters most. If you nail this, the feature works even if edges are rough.*
+*Why: Defines the hero AC — the one that matters most.*
 
 **PQ3: Data & State**
-"What data does this need? Where does it come from — user input, API, database, scraping? What happens if the data source is empty, slow, or wrong?"
+"What data does this feature need? Where does it come from? What happens if the
+data source is empty, slow, or wrong?"
 
-*Why: Surfaces integration complexity and error handling before coding starts.*
+*Why: Surfaces integration complexity and error handling.*
 
 **PQ4: Design Impact**
-"How much does this change how the product looks and feels? Is it invisible backend work (none), a small UI addition (minor), or a significant visual change (major)? What existing patterns can we reuse?"
+"How much does this change how the product looks and feels? Is it invisible backend
+work (none), a small UI addition (minor), or a significant visual change (major)?
+What existing patterns can we reuse?"
 
-*Why: Sets the `design_impact` tag that controls whether the design iterator runs during QA. Avoids both over-polishing and shipping ugly.*
+*Why: Sets the `design_impact` tag for QA.*
 
 **PQ5: Scope Knife**
-"You mentioned {risk from Q6} as a risk. Should we handle that in v1 or explicitly defer it? Is there anything else in the wedge that could be cut without losing the core value?"
+"Is there anything in this feature that could be cut without losing the core value?
+Any edge cases we should explicitly defer?"
 
-*Why: Last chance to cut scope before committing to ACs. Easier to cut here than after tasks are generated.*
+*Why: Last chance to cut before committing to ACs.*
 
 **PQ6: Done-When**
-"If you could only test 3 things to know this works, what would they be?"
+"If you could only test 3 things to know this feature works, what would they be?"
 
-*Why: These become your top 3 acceptance criteria. Everything else is secondary. Keeps the AC list focused.*
+*Why: These become your top 3 acceptance criteria.*
 
-> **CHECKPOINT:** After all 6 answers, summarize the findings. Ask: "Did I capture this right? Anything to add before I write the PRD?"
+> **CHECKPOINT:** After all 6 answers, summarize. Ask: "Did I capture this right? Anything to add before I write the PRD?"
 
-### Step 5b: Write the PRD
+### Step 5: Write the PRD
 
-Using the deep-dive answers, create the formal PRD. In launchkit projects, use `/create-prd` as the starting point:
-
-```bash
-/create-prd
-```
-
-Structure the PRD (whether from `/create-prd` or written manually):
+Structure the PRD:
 
 ```markdown
 # PRD-{N}: {Feature Name}
 
 **Date:** {YYYY-MM-DD}
-**Design doc:** {link to sprint-plan output}
+**Roadmap:** {link to roadmap output}
+**Feature:** {N} of {total}
 **Design impact:** {none | minor | major}
 
 ## User Journey
 {PQ1 answer — step by step}
 
 ## Success Moment
-{PQ2 answer — the hero screenshot}
+{PQ2 answer — the hero artifact}
 
 ## Acceptance Criteria
 - [ ] AC-1: {from PQ6 top 3 — the must-haves}
@@ -181,6 +183,15 @@ Structure the PRD (whether from `/create-prd` or written manually):
 - [ ] AC-3: {third must-have}
 - [ ] AC-4: {additional from PQ1 journey steps}
 - [ ] AC-5: {error handling from PQ3}
+
+## Architecture
+{2a — technical approach}
+
+## Data Flow
+{2b — data flow description}
+
+## Edge Cases
+{2c — numbered list}
 
 ## Design Requirements
 {PQ4 answer — visual expectations, patterns to reuse}
@@ -192,24 +203,27 @@ design_impact: {none | minor | major}
 ## Out of Scope
 {PQ5 answer — explicitly deferred items}
 
+## Learnings from Prior Features
+{Summary of relevant retro insights that shaped this PRD}
+
 ## Open Questions
-{Anything unresolved from the deep-dive}
+{Anything unresolved}
 ```
 
 **Output path:** `product/prds/prd-{N}-{name}.md` (launchkit) or `skills/_output/prd-{date}-{slug}.md` (non-launchkit)
 
 > **CHECKPOINT:** Present the PRD. Ask: "Are these acceptance criteria right? Anything missing or too aggressive?"
 
-### Step 6: Generate Task Breakdown (ai-dev-tasks integration)
+### Step 6: Generate Task Breakdown
 
-With the PRD approved, decompose it into tasks using `/generate-tasks`:
+With the PRD approved, decompose into tasks.
 
+In launchkit projects, use `/generate-tasks`:
 ```bash
 /generate-tasks product/prds/prd-{N}-{name}.md
-# Output: product/tasks/tasks-{N}-prd-{name}.md
 ```
 
-If no launchkit (non-tool project), write the task breakdown manually.
+Otherwise, write the task breakdown manually.
 
 **Task breakdown rules:**
 - One parent task = one atomic commit = one heartbeat for the coder
@@ -221,53 +235,74 @@ If no launchkit (non-tool project), write the task breakdown manually.
 
 **Output path:** `skills/_output/sprint-review-{date}-{slug}.md`
 
-Write the locked plan:
-
 ```markdown
-## Sprint Review
+---
+skill: sprint-review
+project: {project}
+date: {YYYY-MM-DD}
+feature: {feature N name}
+roadmap: {path to roadmap}
+prd: {path to PRD}
+---
+
+## Sprint Review: {Feature Name}
 
 **Reviewed by:** {agent name}
 **Date:** {YYYY-MM-DD}
-**Scope mode:** {Expand | Selective Expand | Hold | Reduce}
+**Feature:** {N} of {total} from roadmap
 
 ### Architecture
-{3a — technical approach}
+{2a — technical approach}
 
 ### Data Flow
-{3b — data flow description}
+{2b — data flow}
 
 ### Edge Cases
-{3c — numbered list}
+{2c — numbered list}
 
 ### Dependencies
-{3d — list}
+{2d — list}
 
 ### Test Strategy
-{Criteria + approach from Step 4}
+{Criteria + approach from Step 3}
 
 ### Task Breakdown
-{Link to generated task file, or inline breakdown if no /generate-tasks}
+{Link to generated task file, or inline breakdown}
+
+### Learnings Applied
+{Which retro insights from prior features influenced this plan}
 
 ### Status: LOCKED
 This plan is approved for implementation.
 ```
 
-> **CHECKPOINT:** Present the locked plan. Ask: "Ready to build? Anything else before we start coding?"
+> **CHECKPOINT:** Present the locked plan. Ask: "Ready to build? Anything else before coding starts?"
 
-**Next step for coders:** Execute tasks using `/process-tasks` — one parent task per heartbeat, atomic commits, post-commit `/review`.
+### Step 8: Update Roadmap Status
+
+Update the roadmap file to mark this feature as `[ACTIVE]`:
+- Set the target feature status to `[ACTIVE]`
+- Add a revision log entry
+
+**Next steps for the execution loop:**
+1. Code the feature (using tasks from Step 6)
+2. `qa-check` to verify
+3. `ship-pr` to merge
+4. `retro` to extract learnings
+5. Check if retro learnings change the roadmap
+6. Run `sprint-review` on the next feature
 
 ## Completion
 
 Report status:
-- **DONE** — Plan locked, architecture defined, test strategy set. State the file path. Suggest starting implementation.
+- **DONE** — PRD written, plan locked, tasks generated. State file paths. Suggest starting implementation.
 - **DONE_WITH_CONCERNS** — Plan locked but with noted risks. List them.
 - **BLOCKED** — Architecture question that needs research or a decision from the founder.
-- **NEEDS_CONTEXT** — Missing technical information (e.g., don't know the API shape, unclear data model).
+- **NEEDS_CONTEXT** — Missing technical information.
 
 ## Learnings Capture
 
 After completion, evaluate:
-1. Did the scope change during review? Why? (Capture the pattern.)
-2. Did we find edge cases that surprised us? (Capture for similar projects.)
+1. Did any retro learnings from prior features change how we approached this PRD?
+2. Did we find edge cases that surprised us?
 3. Did architecture search surface a better approach than our first instinct?
-4. Any reusable test strategy patterns?

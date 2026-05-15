@@ -25,7 +25,7 @@ triggers:
   - "think through"
 benefits-from: []
 feeds-into:
-  - sprint-review
+  - roadmap
 qmd:
   - collection: agent-knowledge
     query: "architecture patterns relevant to this problem"

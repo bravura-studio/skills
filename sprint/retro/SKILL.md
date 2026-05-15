@@ -23,7 +23,8 @@ triggers:
   - "debrief"
 benefits-from:
   - ship-pr
-feeds-into: []
+feeds-into:
+  - roadmap
 qmd: []
 reads-learnings: true
 writes-learnings: true
@@ -133,7 +134,24 @@ The retro skill's learnings.jsonl (Step 4) captures process/operational insights
 
 If NOT a launchkit project, skip this step. The learnings.jsonl from Step 4 is sufficient.
 
-### Step 6: Evaluate Skill Updates
+### Step 6: Roadmap Checkpoint
+
+If this retro is part of a multi-feature roadmap execution loop:
+
+1. Read the active roadmap (`skills/_output/roadmap-*.md`)
+2. Mark the just-completed feature as `[DONE]`
+3. Evaluate: **do any learnings from this retro change the roadmap?**
+   - Should a planned feature be cut? (validated assumption was wrong)
+   - Should a new feature be added? (discovered need during implementation)
+   - Should features be reordered? (dependency changed, risk reassessed)
+   - Should a feature's scope change? (learned something about the domain)
+4. If YES: update the roadmap — change statuses, reorder, add/cut features, add revision log entry
+5. If NO: advance the pointer to the next `[PLANNED]` feature
+6. State what the next feature is and suggest running `sprint-review` on it
+
+> **CHECKPOINT:** If roadmap changes are needed, present them. Ask: "Agree with these roadmap changes? Ready to move to Feature N?"
+
+### Step 7: Evaluate Skill Updates
 
 Check if any learning warrants updating a skill:
 - Should `code-review` check for something it missed this sprint?
@@ -142,7 +160,7 @@ Check if any learning warrants updating a skill:
 
 If yes, note the proposed skill update but don't make it — flag for the founder to approve.
 
-### Step 7: Report
+### Step 8: Report
 
 ```markdown
 ## Retro: {sprint description}

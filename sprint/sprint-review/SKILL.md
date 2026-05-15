@@ -49,10 +49,20 @@ needs decomposition into features, run `roadmap` first. CEO scope review lives i
 **Just-in-time PRDs:** This skill runs once per feature in the roadmap's execution
 loop. Previous features' retros inform this PRD. Never batch-write PRDs.
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 3 files. All 3 must exist before reporting DONE.
+
+1. **PRD** → `product/prds/prd-{N}-{name}.md`
+2. **Task file** → `product/tasks/tasks-prd-{N}-{name}.md` (follows generate-tasks format: PRD summary header, parent tasks mapped to ACs, subtasks with embedded PRD context, validation + dependencies per parent)
+3. **Locked plan** → `product/sprint-reviews/sprint-review-{date}-{slug}.md` (links PRD + task file, architecture, test strategy)
+
+Before writing the completion status, verify all 3 files exist.
+
 ## Prerequisites
 
-- A roadmap with sequenced features (check `skills/_output/roadmap-*.md`)
-- OR a sprint-plan for simple/single-feature work (check `skills/_output/sprint-plan-*.md`)
+- A roadmap with sequenced features (check `product/roadmap/` or `skills/_output/roadmap-*.md`)
+- OR a sprint-plan for simple/single-feature work (check `product/sprint-plan/` or `skills/_output/sprint-plan-*.md`)
 - If neither exists, suggest running `sprint-plan` → `roadmap` first
 - For the second feature onward: the previous feature's retro should exist
 
@@ -218,22 +228,72 @@ design_impact: {none | minor | major}
 
 With the PRD approved, decompose into tasks.
 
+**Output path:** `product/tasks/tasks-prd-{N}-{name}.md`
+
 In launchkit projects, use `/generate-tasks`:
 ```bash
 /generate-tasks product/prds/prd-{N}-{name}.md
 ```
 
-Otherwise, write the task breakdown manually.
+For all projects (launchkit or not), the task file MUST follow this format:
+
+```markdown
+# Tasks: [Feature Name]
+
+**PRD:** product/prds/prd-{N}-{name}.md
+**Created:** [date]
+**Status:** Planning
+
+### PRD Summary
+> **Problem:** [1-sentence]
+> **Goal:** [Key goal]
+> **Success:** [Primary metric / done-when]
+> **Scope:** [What's explicitly out of scope]
+
+---
+
+## Parent Tasks
+
+- [ ] 1. [Parent task 1] — AC-1, AC-2
+- [ ] 2. [Parent task 2] — AC-3, AC-4
+...
+
+---
+
+## Task 1: [Parent task name]
+
+### PRD Context
+> **AC-1**: [Exact acceptance criterion]
+> **AC-2**: [Exact acceptance criterion]
+> **Technical**: [Key implementation note, if task-relevant]
+
+### Subtasks
+- [ ] 1.1 [Specific implementation step]
+- [ ] 1.2 [Specific implementation step]
+- [ ] 1.3 [Specific implementation step]
+
+### Validation
+- Verify: AC-1, AC-2 [specific ACs this task must satisfy]
+
+### Dependencies
+- Requires: [prior tasks if any]
+- Enables: [subsequent tasks if any]
+
+## Task 2: [Next parent task]
+...
+```
 
 **Task breakdown rules:**
 - One parent task = one atomic commit = one heartbeat for the coder
-- Each parent task has clear acceptance criteria
+- Each parent task maps to 1-5 acceptance criteria from the PRD
+- Each parent task has embedded PRD context (3-10 lines — if >10, split the task)
 - Subtasks within a parent are executed sequentially, not cherry-picked
 - The first parent task should be scaffolding/setup; the last should be integration/cleanup
+- Validation section references specific AC-N items from the PRD
 
 ### Step 7: Write the Locked Plan
 
-**Output path:** `skills/_output/sprint-review-{date}-{slug}.md`
+**Output path:** `product/sprint-reviews/sprint-review-{date}-{slug}.md`
 
 ```markdown
 ---

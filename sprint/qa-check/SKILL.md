@@ -41,6 +41,12 @@ Three tiers of thoroughness:
 
 Default to **Standard** unless the change is trivial (Quick) or high-risk (Exhaustive).
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 output. It must be delivered before reporting DONE.
+
+1. **QA verdict** → reported inline (SHIP, FIX_AND_RECHECK, or BLOCK) with structured markdown checklist. No file written — the verdict is communicated to the user/agent directly.
+
 ## Prerequisites
 
 - Code changes implemented and code-review completed (or explicitly skipped)

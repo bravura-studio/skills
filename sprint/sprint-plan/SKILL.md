@@ -42,6 +42,12 @@ Every non-trivial piece of work starts here. The goal is to go from a vague idea
 
 Adapted from gstack's /office-hours (Garry Tan) and the BUILD.FUN.FREE ai-dev-tasks pipeline (vision → roadmap → PRDs → tasks).
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 file. It must exist before reporting DONE.
+
+1. **Design doc** → `product/sprint-plan/sprint-plan-{date}-{slug}.md`
+
 ## Prerequisites
 
 - A problem, idea, or feature request (can be vague — that's the point)
@@ -92,7 +98,7 @@ What could go wrong? What assumptions might be wrong? What's the worst-case fail
 
 Write a structured design doc based on the answers. Save to a predictable location so `sprint-review` can find it.
 
-**Output path:** `skills/_output/sprint-plan-{date}-{slug}.md`
+**Output path:** `product/sprint-plan/sprint-plan-{date}-{slug}.md`
 
 **Design doc format:**
 

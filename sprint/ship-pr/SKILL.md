@@ -38,6 +38,12 @@ The final mechanical step before human review. Everything has been thought throu
 - Never use `git push --no-verify`. The pre-push hook is a safety gate.
 - Never skip hooks or bypass signing.
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 output. It must exist before reporting DONE.
+
+1. **GitHub PR** → created via `gh pr create`, URL reported to the user. Links design doc, sprint review, code review, and QA verdicts in the PR body.
+
 ## Prerequisites
 
 - Code changes committed on a feature branch

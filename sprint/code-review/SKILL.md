@@ -42,10 +42,16 @@ Not a nitpick pass. Focus on things that would break in production or confuse th
 
 **Relationship to launchkit `/review`:** In launchkit projects, `/review` runs automatically after each parent task commit (per `/process-tasks` workflow). This skill is the broader audit that runs ONCE after all implementation is complete — it covers the full diff against main, not individual commits. Think of `/review` as per-commit lint and this skill as the pre-merge gate.
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 output. It must be delivered before reporting DONE.
+
+1. **Review verdict** → reported inline (PASS, PASS_WITH_FIXES, or FAIL) with structured markdown summary. No file written — the verdict is communicated to the user/agent directly.
+
 ## Prerequisites
 
 - Code changes exist (staged, unstaged, or committed on a branch)
-- Ideally a locked plan from `sprint-review` to review against (check `skills/_output/sprint-review-*.md`)
+- Ideally a locked plan from `sprint-review` to review against (check `product/sprint-reviews/` or `skills/_output/sprint-review-*.md`)
 - In launchkit projects: `/process-tasks` has completed all parent tasks and per-commit `/review` has already run
 
 ## Steps

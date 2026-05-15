@@ -47,6 +47,12 @@ decisions at once and prevents learnings from earlier features from shaping late
 This skill decomposes the plan so features are built one at a time, with retros between
 them. Just-in-time PRDs.
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 file. It must exist before reporting DONE.
+
+1. **Roadmap** → `product/roadmap/roadmap-{date}-{slug}.md`
+
 ## Prerequisites
 
 - A design doc from `sprint-plan` (check `skills/_output/sprint-plan-*.md`)
@@ -144,7 +150,7 @@ Rules:
 
 ### Step 6: Write the Roadmap
 
-**Output path:** `skills/_output/roadmap-{date}-{slug}.md`
+**Output path:** `product/roadmap/roadmap-{date}-{slug}.md`
 
 ```markdown
 ---

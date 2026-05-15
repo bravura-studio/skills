@@ -38,6 +38,13 @@ The compound learning engine. Every sprint produces insights — about the codeb
 
 This is NOT a ceremony or a meeting format. It's a 5-minute extraction pass that compounds over time. Fast, specific, actionable.
 
+## Required Outputs (do not skip)
+
+This skill produces exactly 1 file (appended). It must be updated before reporting DONE.
+
+1. **Learnings** → `skills/_learnings/{project-slug}.jsonl` (append new learning records)
+2. **Roadmap update** → update feature status in `product/roadmap/roadmap-*.md` (if applicable)
+
 ## Prerequisites
 
 - A completed sprint (PR merged, feature shipped, or work explicitly concluded)

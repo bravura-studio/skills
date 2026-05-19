@@ -137,6 +137,22 @@ Post a comment on the Paperclip issue with:
 - Any issues encountered or decisions made
 - Next step (typically: code-review or QA)
 
+**Creating follow-up issues for other agents (QA handoff, etc.):**
+
+Do NOT use Paperclip MCP tools for cross-agent issue creation — they silently drop `assigneeAgentId`. Use the `create-issue.sh` script instead:
+
+```bash
+bash skills/scripts/create-issue.sh \
+  --title "QA: Review <what>" \
+  --assignee "<target-agent-id>" \
+  --description "## Task\n..." \
+  --status todo \
+  --priority high
+```
+
+Requires env vars: `PAPERCLIP_TOKEN`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_PROJECT_ID`.
+These should be set in your agent config or workspace `.env`.
+
 ## Escalation
 
 If you hit ANY blocker during setup or implementation:

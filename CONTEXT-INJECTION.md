@@ -114,3 +114,20 @@ When you hit ANY blocker — missing credentials, auth errors, build failures, m
 3. THEN set the issue status to blocked and add a comment explaining the blocker.
 
 Never silently block. If the webhook fails, add "ESCALATION FAILED" to the issue comment so it's visible on next heartbeat review.
+
+### Cross-Agent Issue Creation
+
+Do NOT use Paperclip MCP tools to create issues assigned to other agents — they silently drop `assigneeAgentId`, leaving the issue unassigned and the target agent unaware.
+
+Use the `create-issue.sh` script instead:
+
+```bash
+bash skills/scripts/create-issue.sh \
+  --title "QA: Review <what>" \
+  --assignee "<target-agent-id>" \
+  --description "## Task\n..." \
+  --status todo \
+  --priority high
+```
+
+Requires env vars: `PAPERCLIP_TOKEN`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_PROJECT_ID`.

@@ -93,3 +93,24 @@ After completing a skill, evaluate:
 **Sources:** `observed` (agent noticed), `corrected` (founder fixed), `validated` (founder confirmed)
 
 **Don't write trivial learnings.** "The build succeeded" is not a learning. "This project's Turbopack config breaks with dynamic imports in API routes" is.
+
+---
+
+## Agent Operating Rules
+
+These rules are injected into every skill execution alongside vault context and learnings. They apply regardless of which skill is running.
+
+### Escalation Protocol
+
+When you hit ANY blocker — missing credentials, auth errors, build failures, missing files, dependency issues — you MUST:
+
+1. **Escalate BEFORE setting status to blocked.** Silent blocks waste days.
+2. Call the ferro-notify webhook:
+   ```bash
+   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-escalation \
+     -H "Content-Type: application/json" \
+     -d '{"message": "BRAA-XXX blocked: <specific reason>", "agent": "<your name>", "priority": "high"}'
+   ```
+3. THEN set the issue status to blocked and add a comment explaining the blocker.
+
+Never silently block. If the webhook fails, add "ESCALATION FAILED" to the issue comment so it's visible on next heartbeat review.

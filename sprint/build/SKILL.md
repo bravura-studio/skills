@@ -59,13 +59,17 @@ Before writing any code, verify the workspace is ready.
 git checkout main
 git pull origin main
 
-# 2. Create feature branch
+# 2. Set git identity (required for Vercel deploys — must be a team member)
+git config user.name "Andre Ochoa"
+git config user.email "andre@andochoa.com"
+
+# 3. Create feature branch
 git checkout -b {agent-name}/{feature-slug}
 
-# 3. Install dependencies (if package.json exists)
+# 4. Install dependencies (if package.json exists)
 if [ -f package.json ]; then npm install; fi
 
-# 4. Verify prerequisites from issue description
+# 5. Verify prerequisites from issue description
 # Check for required files, env vars, tools mentioned in the task
 ```
 
@@ -166,9 +170,9 @@ If you hit ANY blocker during setup or implementation:
 
 2. **Call the ferro-notify webhook:**
    ```bash
-   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-escalation \
+   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-notify \
      -H "Content-Type: application/json" \
-     -d '{"message": "BRAA-XXX blocked: <specific reason>", "agent": "<your name>", "priority": "high"}'
+     -d '{"text": "🚨 BRAA-XXX blocked: <specific reason> (agent: <your name>)", "url": "https://paperclip.andochoa.com"}'
    ```
 
 3. **Then** set the issue status to blocked and add a comment explaining the blocker.

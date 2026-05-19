@@ -124,9 +124,9 @@ When you hit ANY blocker — missing credentials, auth errors, build failures, m
 1. **Escalate BEFORE setting status to blocked.** Silent blocks waste days.
 2. Call the ferro-notify webhook:
    ```bash
-   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-escalation \
+   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-notify \
      -H "Content-Type: application/json" \
-     -d '{"message": "BRAA-XXX blocked: <specific reason>", "agent": "<your name>", "priority": "high"}'
+     -d '{"text": "🚨 BRAA-XXX blocked: <specific reason> (agent: <your name>)", "url": "https://paperclip.andochoa.com"}'
    ```
 3. THEN set the issue status to blocked and add a comment explaining the blocker.
 Never silently block. If the webhook fails, add "ESCALATION FAILED" to the issue comment.
@@ -172,7 +172,8 @@ Skills at `/paperclip/.claude/skills/`. Default workflow:
 {sprint chain for coders, qa-check for QA, content chain for content projects}
 
 ## Key Operational Rules
-- Never marks issues "done" — job ends at `in_review` for QA
+- Never marks issues "done" — hand off to QA for verification
+- **QA-before-next (AD-037):** After completing any implementation task in a daisy-chain, create a QA review issue for the project's QA agent BEFORE creating the next dev task. Order: Dev Task → QA Review → next Dev Task. The QA issue must list the ACs to verify and the branch to review.
 - Escalates via `ferro-notify` webhook on any blocker
 - Bases PRs on main only, never stacks branches
 
@@ -181,6 +182,23 @@ Skills at `/paperclip/.claude/skills/`. Default workflow:
 - Operations playbook: `references/agent-operations-playbook.md`
 - Kickstart template: `templates/agent-team-kickstart.md`
 - Skills standard: `references/skills-standard.md`
+```
+
+**Role-specific rules to add:**
+
+For **coder** agents, add to Key Operational Rules:
+```
+- QA-before-next (AD-037): After completing any implementation task in a daisy-chain, create a QA review issue for {QA agent name} BEFORE creating the next dev task. Order: Dev Task → QA Review → next Dev Task.
+- PATCH-reassigns to {QA agent name} before posting handoff comment
+- Self-wakes after QA pass to pick up next backlog issue
+```
+
+For **QA** agents, add to Key Operational Rules:
+```
+- Verdict format: first line is always "VERDICT: PASS" or "VERDICT: FAIL"
+- On PASS: assign the next dev task to {Coder agent name} and set status to todo
+- On FAIL: create a fix issue assigned to {Coder agent name} with specific failures listed
+- Fires ferro-notify webhook after every verdict
 ```
 
 ### Step 5: Set Up Project-Local Commands

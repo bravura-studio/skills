@@ -25,7 +25,7 @@ triggers:
 benefits-from:
   - roadmap
 feeds-into:
-  - code-review
+  - build
 qmd:
   - collection: agent-knowledge
     query: "architecture patterns and technical decisions"

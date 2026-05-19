@@ -21,7 +21,7 @@ triggers:
   - "look at the diff"
   - "code review"
 benefits-from:
-  - sprint-review
+  - build
 feeds-into:
   - qa-check
 qmd:

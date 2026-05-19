@@ -119,8 +119,17 @@ Write `projects/{project-name}/CHARTER.md` based on the interview answers:
 ## Success Metrics
 {Propose 4-5 measurable metrics based on project type}
 
-## Escalation Rules
-{Standard escalation rules adapted to project}
+## Escalation Protocol (ALL agents)
+When you hit ANY blocker — missing credentials, auth errors, build failures, missing files, dependency issues — you MUST:
+1. **Escalate BEFORE setting status to blocked.** Silent blocks waste days.
+2. Call the ferro-notify webhook:
+   ```bash
+   curl -s -X POST https://n8n.andochoa.com/webhook/ferro-escalation \
+     -H "Content-Type: application/json" \
+     -d '{"message": "BRAA-XXX blocked: <specific reason>", "agent": "<your name>", "priority": "high"}'
+   ```
+3. THEN set the issue status to blocked and add a comment explaining the blocker.
+Never silently block. If the webhook fails, add "ESCALATION FAILED" to the issue comment.
 ```
 
 ### Step 4: Create Agent Personas

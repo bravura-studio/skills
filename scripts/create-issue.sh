@@ -32,9 +32,16 @@
 set -euo pipefail
 
 PAPERCLIP_DOMAIN="${PAPERCLIP_DOMAIN:-paperclip.andochoa.com}"
-PAPERCLIP_TOKEN="${PAPERCLIP_TOKEN:-}"
+# Accept either PAPERCLIP_TOKEN or PAPERCLIP_API_KEY (adapter injects the latter)
+PAPERCLIP_TOKEN="${PAPERCLIP_TOKEN:-${PAPERCLIP_API_KEY:-}}"
 PAPERCLIP_COMPANY_ID="${PAPERCLIP_COMPANY_ID:-}"
 PAPERCLIP_PROJECT_ID="${PAPERCLIP_PROJECT_ID:-}"
+
+# Try loading from workspace .env if vars are missing
+if [[ -z "$PAPERCLIP_TOKEN" || -z "$PAPERCLIP_COMPANY_ID" ]] && [[ -f ".env.paperclip" ]]; then
+  set -a; source .env.paperclip; set +a
+  PAPERCLIP_TOKEN="${PAPERCLIP_TOKEN:-${PAPERCLIP_API_KEY:-}}"
+fi
 
 # Parse arguments
 TITLE=""

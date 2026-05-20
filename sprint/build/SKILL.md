@@ -213,6 +213,18 @@ curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues"
 
 The QA agent ID and project ID should be in your workspace CLAUDE.md or .env.paperclip.
 
+**After creating the QA issue, explicitly wake the QA agent:**
+
+```bash
+curl -sS -X POST "$PAPERCLIP_API_URL/api/agents/{QA-agent-id}/wakeup" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  -d '{}'
+```
+
+Do not rely on Paperclip's assignment-based auto-wake alone — it can be coalesced or dropped when the target agent is in error/running state. The explicit wakeup is a belt-and-suspenders guarantee.
+
 ### Step 6: Chain Next Task (blocked by QA)
 
 **Do NOT self-wake for the next task.** Self-wake races ahead of QA — the agent picks up the next task before QA passes on the current one. Instead, use Paperclip's `blockedByIssueIds` to enforce sequencing.

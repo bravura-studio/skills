@@ -40,10 +40,14 @@ This is NOT a ceremony or a meeting format. It's a 5-minute extraction pass that
 
 ## Required Outputs (do not skip)
 
-This skill produces exactly 1 file (appended). It must be updated before reporting DONE.
+These outputs must be updated before reporting DONE:
 
 1. **Learnings** → `skills/_learnings/{project-slug}.jsonl` (append new learning records)
-2. **Roadmap update** → update feature status in `product/roadmap/roadmap-*.md` (if applicable)
+2. **Project status sync** → update ALL of the following that apply:
+   - Charter phase checkboxes (`projects/{name}/CHARTER.md` in build-fun-free)
+   - Roadmap feature status (`product/roadmap/roadmap-*.md`)
+   - PRD acceptance criteria (`product/prds/prd-*.md`)
+   - Build sequence status (`architecture/build-sequence.md` in build-fun-free)
 
 ## Prerequisites
 
@@ -141,11 +145,33 @@ The retro skill's learnings.jsonl (Step 4) captures process/operational insights
 
 If NOT a launchkit project, skip this step. The learnings.jsonl from Step 4 is sufficient.
 
-### Step 6: Roadmap Checkpoint
+### Step 6: Project Status Sync
+
+Update ALL project tracking docs to reflect the completed work. This is the single source of truth for project progress — if it's not updated here, it didn't happen.
+
+#### 6a: Charter Update
+
+Read `projects/{project-name}/CHARTER.md` (in the build-fun-free repo, NOT the project repo). Update:
+- Phase checklist: mark completed items `[x]`, in-progress items `[~]`
+- Current State section: update status description, PR count, last-updated date
+- Agent Team section: if team composition changed
+
+```bash
+# Find the charter
+cat /root/code/build-fun-free/projects/{project-name}/CHARTER.md
+```
+
+Rules:
+- Only mark `[x]` for items you can VERIFY are done (deployed, tested, confirmed)
+- Mark `[~]` for items with partial progress
+- Never mark something done based on issue status alone — check the actual deliverable
+- Add a `- **Last updated:** {YYYY-MM-DD}` line to Current State if not present
+
+#### 6b: Roadmap Update + Auto-Advance
 
 If this retro is part of a multi-feature roadmap execution loop:
 
-1. Read the active roadmap (`skills/_output/roadmap-*.md`)
+1. Read the active roadmap (`skills/_output/roadmap-*.md` or `product/roadmap/`)
 2. Mark the just-completed feature as `[DONE]`
 3. Evaluate: **do any learnings from this retro change the roadmap?**
    - Should a planned feature be cut? (validated assumption was wrong)
@@ -153,8 +179,44 @@ If this retro is part of a multi-feature roadmap execution loop:
    - Should features be reordered? (dependency changed, risk reassessed)
    - Should a feature's scope change? (learned something about the domain)
 4. If YES: update the roadmap — change statuses, reorder, add/cut features, add revision log entry
-5. If NO: advance the pointer to the next `[PLANNED]` feature
-6. State what the next feature is and suggest running `sprint-review` on it
+5. Identify the next `[PLANNED]` feature and mark it `[ACTIVE]`
+6. **Auto-advance:** Create a Paperclip issue for the next feature's sprint-review, assigned to the agent that runs sprint-review (typically the coder or CEO agent):
+
+```bash
+curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  -d '{
+    "title": "Sprint Review: Feature {N} — {feature name}",
+    "description": "## Context\nFeature {N-1} completed. Retro done. Roadmap advanced.\n\nRun /sprint-review on Feature {N} from the roadmap.\n\nRoadmap: {roadmap-path}\nPrevious retro learnings to apply: {key insights}",
+    "assigneeAgentId": "{coder-or-ceo-agent-id}",
+    "projectId": "{project-id}",
+    "status": "todo"
+  }'
+```
+
+If no more features remain in the roadmap, skip the issue creation and report "Roadmap complete — all features shipped."
+
+#### 6c: PRD Acceptance Criteria
+
+If the completed work maps to a specific PRD (`product/prds/prd-*.md`):
+
+1. Read the PRD
+2. Mark completed acceptance criteria as `[x]`
+3. Note any criteria that were descoped or changed during implementation
+
+#### 6d: Build Sequence Update
+
+If the project is tracked in `architecture/build-sequence.md` (in build-fun-free repo):
+
+1. Read current status
+2. Update the status column to reflect actual state
+3. Follow the 3-state system: `[ ]` not started, `[~]` in progress, `[x]` done AND verified
+
+```bash
+cat /root/code/build-fun-free/architecture/build-sequence.md
+```
 
 > **CHECKPOINT:** If roadmap changes are needed, present them. Ask: "Agree with these roadmap changes? Ready to move to Feature N?"
 

@@ -43,10 +43,12 @@ This is the implementation phase — where code gets written. Everything before 
 
 ## Required Outputs (do not skip)
 
-This skill produces exactly 2 outputs. Both must exist before reporting DONE.
+This skill produces these outputs. All must exist before reporting DONE.
 
 1. **Feature branch** → pushed to origin with all implementation commits. Branch name: `{agent-name}/{feature-slug}` (e.g., `siza/f2-task3-lead-adapter`).
-2. **Completion comment** → posted on the Paperclip issue with: what was built, which files changed, branch name, and any issues encountered.
+2. **Task file updated** → mark completed parent task and subtasks `[x]` in `product/tasks/tasks-prd-{N}-{name}.md`. Update Status from "Planning" to "In Progress" (or "Complete" if all tasks done).
+3. **Completion comment** → posted on the Paperclip issue with: what was built, which files changed, branch name, which parent task was completed, and how many tasks remain.
+4. **QA issue created** → assigned to the project's QA agent for the completed parent task (with ACs to verify and branch name).
 
 ## Steps
 
@@ -81,9 +83,32 @@ if [ -f package.json ]; then npm install; fi
 
 If ANY prerequisite is missing: **STOP. Do not start coding.** Go to the Escalation section.
 
+### Step 1b: Load Task File
+
+If the project has a task file (`product/tasks/tasks-prd-{N}-{name}.md`), read it to determine WHAT to implement.
+
+```bash
+# Find task files
+ls product/tasks/tasks-*.md 2>/dev/null
+
+# Read the active task file
+cat product/tasks/tasks-prd-{N}-{name}.md
+```
+
+**Task file protocol:**
+1. Read the Parent Tasks checklist at the top of the file
+2. Find the first parent task marked `[ ]` (not yet started)
+3. Read that parent task's section: PRD Context, Subtasks, Validation, Dependencies
+4. Check Dependencies → Requires: ensure all prerequisite tasks are `[x]`
+5. This parent task is your scope for THIS heartbeat — do NOT work on other tasks
+
+If no task file exists, fall back to the Paperclip issue description as the task spec.
+
+If ALL parent tasks are `[x]`, the task file is complete. Update Status to "Complete", run retro, and exit.
+
 ### Step 2: Implement
 
-Work through the task subtasks in order. After completing each meaningful unit of work:
+Work through the task subtasks in order (from the task file's parent task section). After completing each meaningful unit of work:
 
 ```bash
 # Stage and commit
@@ -125,7 +150,24 @@ git status  # should be clean
 git log --oneline origin/{branch}..HEAD  # should be empty
 ```
 
-### Step 4: Handoff
+### Step 4: Update Task File
+
+If working from a task file, mark the completed parent task and its subtasks as done:
+
+```bash
+# Mark subtasks [x] in the task file
+# Mark the parent task [x] in the Parent Tasks checklist
+# Update Status: "Planning" → "In Progress" (or "Complete" if all tasks done)
+```
+
+Commit the task file update:
+```bash
+git add product/tasks/tasks-*.md
+git commit -m "chore: mark task {N} complete in task file"
+git push
+```
+
+### Step 5: Handoff
 
 ```bash
 # Final push (safety)
@@ -138,24 +180,54 @@ Post a comment on the Paperclip issue with:
 - What was implemented (list of changes)
 - Branch name
 - Files changed (`git diff --stat main...HEAD`)
+- Which parent task was completed (e.g., "Task 2 of 4")
+- How many tasks remain in the task file
 - Any issues encountered or decisions made
-- Next step (typically: code-review or QA)
 
-**Creating follow-up issues for other agents (QA handoff, etc.):**
+**Create QA issue for the completed parent task:**
 
-Do NOT use Paperclip MCP tools for cross-agent issue creation — they silently drop `assigneeAgentId`. Use the `create-issue.sh` script instead:
+Use curl with the REST API to create the QA issue (do NOT rely on MCP tools alone — they may silently drop assigneeAgentId):
 
 ```bash
-bash skills/scripts/create-issue.sh \
-  --title "QA: Review <what>" \
-  --assignee "<target-agent-id>" \
-  --description "## Task\n..." \
-  --status todo \
-  --priority high
+curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  -d '{
+    "title": "QA: Task {N} — {description}",
+    "description": "## Acceptance Criteria to verify\n{ACs from task file Validation section}\n\n## Branch\n{branch-name}\n\n## Task file\nproduct/tasks/tasks-prd-{N}-{name}.md — Task {N}",
+    "assigneeAgentId": "{QA-agent-id}",
+    "projectId": "{project-id}",
+    "status": "todo"
+  }'
 ```
 
-Requires env vars: `PAPERCLIP_TOKEN`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_PROJECT_ID`.
-These should be set in your agent config or workspace `.env`.
+The QA agent ID and project ID should be in your workspace CLAUDE.md or .env.paperclip.
+
+### Step 6: Self-Wake for Next Task
+
+After QA passes on the current parent task, the next task needs to start. Set this up:
+
+```bash
+# Check if more tasks remain in the task file
+if grep -qE '^\- \[ \] [0-9]+\.' product/tasks/tasks-*.md 2>/dev/null; then
+  echo "More tasks remain — next build will pick up the next parent task"
+  # Self-wake after 3 seconds (must land AFTER current heartbeat exits)
+  sleep 3
+  curl -sS -X POST "$PAPERCLIP_API_URL/api/agents/$PAPERCLIP_AGENT_ID/wakeup" \
+    -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+    -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID"
+else
+  echo "All tasks complete — task file done. Run retro."
+fi
+```
+
+**Important:** The self-wake fires AFTER this heartbeat exits. When you wake up next:
+1. Read the task file again
+2. The QA task for the previous parent task may still be in progress
+3. If the QA task is not yet PASS, wait (check the QA issue status)
+4. If QA passed, pick up the next `[ ]` parent task
+5. If QA failed, pick up the fix issue instead
 
 ## Escalation
 

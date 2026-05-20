@@ -290,6 +290,9 @@ For all projects (launchkit or not), the task file MUST follow this format:
 - Subtasks within a parent are executed sequentially, not cherry-picked
 - The first parent task should be scaffolding/setup; the last should be integration/cleanup
 - Validation section references specific AC-N items from the PRD
+- **QA gates are mandatory.** After every implementation task, insert a QA task assigned to the project's QA agent. The QA task reviews the branch against the ACs covered by the preceding implementation task. Only after QA PASS does the next implementation task begin. Format: `Task N.5: QA review (→ {QA agent name})` with the relevant AC numbers listed. If the project has no QA agent, flag this as a gap.
+- **Task file drives the autonomous loop.** The build skill reads this task file to determine which parent task to execute next. Agents mark tasks `[x]` as they complete, self-wake after QA passes, and pick up the next `[ ]` parent task. The task file is the source of truth for progress — not Paperclip issue status alone. The loop runs until all parent tasks are `[x]`, then retro fires automatically.
+- **Include agent IDs in QA gate tasks.** Each `Task N.5: QA review` must include the QA agent's Paperclip ID so the build skill can create the QA issue with correct assignment. Format: `Task N.5: QA review (→ {QA agent name}, {QA-agent-id})`.
 
 ### Step 7: Write the Locked Plan
 

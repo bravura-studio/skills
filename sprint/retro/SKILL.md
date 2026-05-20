@@ -167,7 +167,7 @@ Rules:
 - Never mark something done based on issue status alone — check the actual deliverable
 - Add a `- **Last updated:** {YYYY-MM-DD}` line to Current State if not present
 
-#### 6b: Roadmap Update
+#### 6b: Roadmap Update + Auto-Advance
 
 If this retro is part of a multi-feature roadmap execution loop:
 
@@ -179,8 +179,24 @@ If this retro is part of a multi-feature roadmap execution loop:
    - Should features be reordered? (dependency changed, risk reassessed)
    - Should a feature's scope change? (learned something about the domain)
 4. If YES: update the roadmap — change statuses, reorder, add/cut features, add revision log entry
-5. If NO: advance the pointer to the next `[PLANNED]` feature
-6. State what the next feature is and suggest running `sprint-review` on it
+5. Identify the next `[PLANNED]` feature and mark it `[ACTIVE]`
+6. **Auto-advance:** Create a Paperclip issue for the next feature's sprint-review, assigned to the agent that runs sprint-review (typically the coder or CEO agent):
+
+```bash
+curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues" \
+  -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+  -d '{
+    "title": "Sprint Review: Feature {N} — {feature name}",
+    "description": "## Context\nFeature {N-1} completed. Retro done. Roadmap advanced.\n\nRun /sprint-review on Feature {N} from the roadmap.\n\nRoadmap: {roadmap-path}\nPrevious retro learnings to apply: {key insights}",
+    "assigneeAgentId": "{coder-or-ceo-agent-id}",
+    "projectId": "{project-id}",
+    "status": "todo"
+  }'
+```
+
+If no more features remain in the roadmap, skip the issue creation and report "Roadmap complete — all features shipped."
 
 #### 6c: PRD Acceptance Criteria
 

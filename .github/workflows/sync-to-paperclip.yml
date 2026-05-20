@@ -1,0 +1,39 @@
+name: Sync skills to Paperclip
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.md'
+      - '**/*.sh'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import skills to Paperclip
+        run: |
+          response=$(curl -sS -w "\n%{http_code}" -X POST \
+            "${{ secrets.PAPERCLIP_API_URL }}/api/companies/${{ secrets.PAPERCLIP_COMPANY_ID }}/skills/import" \
+            -H "Authorization: Bearer ${{ secrets.PAPERCLIP_BOARD_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"source": "https://github.com/bravura-studio/skills"}')
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "Skills imported successfully (HTTP $http_code)"
+            echo "$body" | python3 -c "
+          import sys, json
+          try:
+              d = json.load(sys.stdin)
+              if 'imported' in d:
+                  print(f\"Imported {len(d['imported'])} skills\")
+          except: pass
+          " 2>/dev/null || true
+          else
+            echo "Import failed (HTTP $http_code)"
+            echo "$body"
+            exit 1
+          fi

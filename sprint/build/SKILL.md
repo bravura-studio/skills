@@ -204,30 +204,43 @@ curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues"
 
 The QA agent ID and project ID should be in your workspace CLAUDE.md or .env.paperclip.
 
-### Step 6: Self-Wake for Next Task
+### Step 6: Chain Next Task (blocked by QA)
 
-After QA passes on the current parent task, the next task needs to start. Set this up:
+**Do NOT self-wake for the next task.** Self-wake races ahead of QA — the agent picks up the next task before QA passes on the current one. Instead, use Paperclip's `blockedByIssueIds` to enforce sequencing.
+
+If more parent tasks remain in the task file, create the next task issue **blocked by the QA issue** you just created in Step 5:
 
 ```bash
-# Check if more tasks remain in the task file
+# Check if more tasks remain
 if grep -qE '^\- \[ \] [0-9]+\.' product/tasks/tasks-*.md 2>/dev/null; then
-  echo "More tasks remain — next build will pick up the next parent task"
-  # Self-wake after 3 seconds (must land AFTER current heartbeat exits)
-  sleep 3
-  curl -sS -X POST "$PAPERCLIP_API_URL/api/agents/$PAPERCLIP_AGENT_ID/wakeup" \
+  # Get the next parent task number and description from the task file
+  NEXT_TASK=$(grep -E '^\- \[ \] [0-9]+\.' product/tasks/tasks-*.md | head -1)
+
+  # Create next task issue, BLOCKED by the QA issue
+  curl -sS -X POST "$PAPERCLIP_API_URL/api/companies/$PAPERCLIP_COMPANY_ID/issues" \
     -H "Authorization: Bearer $PAPERCLIP_API_KEY" \
-    -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID"
+    -H "Content-Type: application/json" \
+    -H "X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID" \
+    -d '{
+      "title": "Task {N+1}: {next task description}",
+      "description": "Read task file: product/tasks/tasks-prd-{N}-{name}.md — Task {N+1}\nRun /build to execute.",
+      "assigneeAgentId": "'$PAPERCLIP_AGENT_ID'",
+      "projectId": "{project-id}",
+      "status": "blocked",
+      "blockedByIssueIds": ["{QA-issue-UUID-from-step-5}"]
+    }'
 else
-  echo "All tasks complete — task file done. Run retro."
+  echo "All tasks complete — task file done. Run /retro."
 fi
 ```
 
-**Important:** The self-wake fires AFTER this heartbeat exits. When you wake up next:
-1. Read the task file again
-2. The QA task for the previous parent task may still be in progress
-3. If the QA task is not yet PASS, wait (check the QA issue status)
-4. If QA passed, pick up the next `[ ]` parent task
-5. If QA failed, pick up the fix issue instead
+**Why blockedByIssueIds instead of self-wake:**
+- `blockedByIssueIds` is enforced by Paperclip — the issue stays blocked until QA marks the blocker done
+- Paperclip auto-wakes the agent when all blockers resolve (`issue_blockers_resolved` event)
+- No race condition: the agent literally cannot start the next task until QA passes
+- If QA fails, the blocker stays open → next task stays blocked → agent picks up the fix issue instead
+
+**When all tasks are done:** Don't create another task issue. Instead, create a retro issue or let the agent exit and report "task file complete."
 
 ## Escalation
 

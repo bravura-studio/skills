@@ -61,7 +61,7 @@ git pull origin main
 
 # 2. Set git identity (required for Vercel deploys — must be a team member)
 git config user.name "Andre Ochoa"
-git config user.email "andre@andochoa.com"
+git config user.email "a.ochoa.g21@gmail.com"
 
 # 3. Create feature branch
 git checkout -b {agent-name}/{feature-slug}

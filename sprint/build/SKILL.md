@@ -176,24 +176,35 @@ git commit -m "chore: mark task {N} complete in task file"
 git push
 ```
 
-### Step 5: Handoff
+### Step 5: Create PR + Handoff
 
 ```bash
 # Final push (safety)
 git push
 
-# Report what was done
+# Create PR for this task's work
+gh pr create --title "{type}: {what changed}" --body "## Task {N}
+{summary of changes}
+
+## Acceptance Criteria
+{ACs from task file}
+
+## Branch
+$(git branch --show-current)"
 ```
+
+**PR is mandatory.** Every task must produce a PR. Code on unmerged branches is invisible to the founder and other agents. The QA agent reviews the PR, not just the branch.
 
 Post a comment on the Paperclip issue with:
 - What was implemented (list of changes)
+- **PR URL** (from gh pr create output)
 - Branch name
 - Files changed (`git diff --stat main...HEAD`)
 - Which parent task was completed (e.g., "Task 2 of 4")
 - How many tasks remain in the task file
 - Any issues encountered or decisions made
 
-**Create QA issue for the completed parent task:**
+**Create QA issue for the completed parent task (include the PR URL):**
 
 Use curl with the REST API to create the QA issue (do NOT rely on MCP tools alone — they may silently drop assigneeAgentId):
 

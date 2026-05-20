@@ -41,6 +41,15 @@ This is the implementation phase — where code gets written. Everything before 
 
 **The cardinal rule: never lose work.** Every meaningful change gets committed. Every commit gets pushed. If you hit a blocker, push first, escalate second.
 
+## Handoff Status Rules (enforced — not optional)
+
+These rules govern ALL issue status changes made by this skill. Violations cause agents to go idle and break the chain.
+
+- **Agent-to-agent handoffs: always `status: "todo"`.** Never `in_review`. Agents filter for `todo,in_progress,blocked` — they SKIP `in_review` issues. Setting `in_review` on a QA handoff = Távora never wakes up.
+- **Next task after QA: always `status: "blocked"` with `blockedByIssueIds`.** Paperclip enforces the gate — the issue stays blocked until QA resolves it. Never use self-wake.
+- **`in_review` is for human/founder review only.** Never between agents.
+- **Reassignment is the wake signal.** Always PATCH `assigneeAgentId` before posting a comment. Comments alone don't wake agents.
+
 ## Required Outputs (do not skip)
 
 This skill produces these outputs. All must exist before reporting DONE.
@@ -48,7 +57,7 @@ This skill produces these outputs. All must exist before reporting DONE.
 1. **Feature branch** → pushed to origin with all implementation commits. Branch name: `{agent-name}/{feature-slug}` (e.g., `siza/f2-task3-lead-adapter`).
 2. **Task file updated** → mark completed parent task and subtasks `[x]` in `product/tasks/tasks-prd-{N}-{name}.md`. Update Status from "Planning" to "In Progress" (or "Complete" if all tasks done).
 3. **Completion comment** → posted on the Paperclip issue with: what was built, which files changed, branch name, which parent task was completed, and how many tasks remain.
-4. **QA issue created** → assigned to the project's QA agent for the completed parent task (with ACs to verify and branch name).
+4. **QA issue created** → assigned to the project's QA agent with `status: "todo"` (NEVER `in_review`).
 
 ## Steps
 

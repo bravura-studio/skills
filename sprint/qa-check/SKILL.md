@@ -41,6 +41,13 @@ Three tiers of thoroughness:
 
 Default to **Standard** unless the change is trivial (Quick) or high-risk (Exhaustive).
 
+## Handoff Status Rules (enforced — not optional)
+
+- **On PASS/SHIP:** Mark the QA issue as `status: "done"`. This auto-unblocks the next dev task if it was created with `blockedByIssueIds`. Never set status to `in_review`.
+- **On FAIL/FIX_AND_RECHECK:** Create a fix issue assigned to the coder with `status: "todo"`. Never `in_review`.
+- **`in_review` is for human/founder review only.** Never between agents. Agents skip `in_review` issues — setting it breaks the chain.
+- **Reassignment is the wake signal.** Always PATCH `assigneeAgentId` before posting a comment.
+
 ## Required Outputs (do not skip)
 
 This skill produces exactly 1 output. It must be delivered before reporting DONE.

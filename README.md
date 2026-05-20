@@ -26,3 +26,4 @@ skills/
 ## Usage
 
 Skills are invoked via `/skill-name` in Claude Code or referenced in Paperclip agent personas.
+

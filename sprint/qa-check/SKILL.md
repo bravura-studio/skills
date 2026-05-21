@@ -43,7 +43,7 @@ Default to **Standard** unless the change is trivial (Quick) or high-risk (Exhau
 
 ## Handoff Status Rules (enforced — not optional)
 
-- **On PASS/SHIP:** Merge the PR (`gh pr merge {pr-number} --merge`), then mark the QA issue as `status: "done"`. This auto-unblocks the next dev task. Then explicitly wake the coder agent: `POST /api/agents/{coder-id}/wakeup` with `{}` body. Do not rely on auto-wake alone — it can be dropped when the coder is in error/rate-limited state. Never set status to `in_review`.
+- **On PASS/SHIP:** Merge the PR (`gh pr merge {pr-number} --merge`), then mark the QA issue as `status: "done"`. Also mark the **parent dev issue** as `status: "done"` (the issue the coder worked on — it's still in_progress). Then explicitly wake the coder agent: `POST /api/agents/{coder-id}/wakeup` with `{}` body. Do not rely on auto-wake alone — it can be dropped when the coder is in error/rate-limited state. Never set status to `in_review`.
 - **On FAIL/FIX_AND_RECHECK:** Create a fix issue assigned to the coder with `status: "todo"`, then explicitly wake the coder agent. Never `in_review`.
 - **`in_review` is for human/founder review only.** Never between agents. Agents skip `in_review` issues — setting it breaks the chain.
 - **Reassignment is the wake signal.** Always PATCH `assigneeAgentId` before posting a comment.
